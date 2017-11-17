@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE configuration SYSTEM "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+<!-- 	<setting name="useStatementNamespaces" value="true"/> -->
+<!-- 	<setting name="maxRequests" value="512"/> -->
+<!-- 	<setting name="maxSessions" value="128"/> -->
+<!-- 	<setting name="maxTransactions" value="32"/> -->
+		<setting name="cacheEnabled" value="false"/>
+		<setting name="useGeneratedKeys" value="true"/>
+		<setting name="defaultExecutorType" value="SIMPLE"/>
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+		<setting name="safeResultHandlerEnabled" value="false"/>
+<!-- 	<setting name="lazyLoadingEnabled" value="true" /> -->
+<!-- 	<setting name="multipleResultSetsEnabled" value="true" /> -->
+<!-- 	<setting name="useColumnLabel" value="true" /> -->
+<!-- 	<setting name="defaultStatementTimeout" value="25000" />		 -->
+
+		<setting name="jdbcTypeForNull" value="NULL"/> 
+	</settings>
+
+	<!--
+	#############################################################################################
+	# myBatis와 매핑할 모델 선언
+	#############################################################################################
+	-->
+	<typeAliases>
+		<typeAlias alias="test" type="gcp.component.test.model.Test"/>
+    </typeAliases>	
+
+</configuration>

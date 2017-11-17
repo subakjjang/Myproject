@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	<!--
+	#################################################################################################
+	# JDBC config
+	#################################################################################################
+	-->	
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations" >
+			<value>classpath:config/system/jdbc.xml</value>
+		</property>
+	</bean>
+	
+	<!--
+	#################################################################################################
+	# 데이터베이스 연결
+	#################################################################################################
+	-->	
+	<bean id="dataSourceSpied1" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close"> 
+		<property name="driverClassName" value="${jdbc.driverClass}"/> 
+		<property name="url" value="${jdbc.url}" /> 
+		<property name="username" value="${jdbc.username}"/> 
+		<property name="password" value="${jdbc.password}"/> 
+	</bean> 
+	<bean id="dataSource1" class="net.sf.log4jdbc.Log4jdbcProxyDataSource">
+        <constructor-arg ref="dataSourceSpied1" />
+        <property name="logFormatter">
+            <bean class="net.sf.log4jdbc.tools.Log4JdbcCustomFormatter">
+                <property name="loggingType" value="MULTI_LINE" />
+                <property name="sqlPrefix" value="SQL         :  "/>
+            </bean>
+        </property>
+    </bean>
+	
+	<!--
+	#################################################################################################
+	#  DB컬럼과 Class Property 매핑 
+	#################################################################################################
+	-->	
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource1" />
+        <property name="configLocation" value="classpath:/config/mybatis/sql-map-config.xml" />
+		<property name="mapperLocations" value="classpath*:/gcp/component/**/sql/*.xml" />
+		<!-- Mybatis Interceptor 설정하면 된다. -->
+	 </bean>
+	 
+	<!--
+	#################################################################################################
+	#  SqlSessionTemplate
+	#################################################################################################
+	-->	
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate" destroy-method="clearCache">
+	      <constructor-arg ref="sqlSessionFactory" />
+	</bean>
+	 
+	<!--
+	#################################################################################################
+	#  TransactionManager
+	#################################################################################################
+	-->	 
+	<bean id="transactionManager1" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource1" />
+	</bean>
+	
+	<tx:advice id="txAdvice1" transaction-manager="transactionManager1" >
+		<tx:attributes>
+			<tx:method name="*" propagation="REQUIRED" />
+			<tx:method name="select*" read-only="true" />
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="list*" read-only="true" />
+			<tx:method name="view*" read-only="true" />
+			<tx:method name="search*" read-only="true" />
+			
+			<tx:method name="insert*" rollback-for="Exception" propagation="REQUIRED" />
+			<tx:method name="create*" rollback-for="Exception" propagation="REQUIRED" />
+			<tx:method name="update*" rollback-for="Exception" propagation="REQUIRED" />
+			<tx:method name="delete*" rollback-for="Exception" propagation="REQUIRED" />
+			<tx:method name="save*" rollback-for="Exception" propagation="REQUIRED" />
+			
+			<tx:method name="insert*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW" />
+			<tx:method name="create*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW" />
+			<tx:method name="update*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW" />
+			<tx:method name="delete*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW" />
+			<tx:method name="save*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- Transaction 단위 설정  : service단위로 Transaction 설정한다. -->
+	 <aop:config>
+		<aop:pointcut id="serviceMethods1" expression="execution(* gcp.component.*.service.*Service.*(..))" />
+		<aop:advisor advice-ref="txAdvice1" pointcut-ref="serviceMethods1" />
+	</aop:config>
+
+</beans>
